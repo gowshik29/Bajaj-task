@@ -1,7 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
-import { storage } from '../lib/firebase';
+import { storage } from '../lib/firebase'; // Assuming you have initialized Firebase in this file
 import { ref, uploadString, getDownloadURL } from 'firebase/storage';
-
 
 type Data = {
   is_success: boolean;
@@ -37,30 +36,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse<
     let file_size_kb = '';
 
     if (file_b64) {
-        try {
-          const fileData = file_b64.replace(/^data:.+;base64,/, '');  // Remove base64 prefix
-      
-          // Create a reference in Firebase Storage
-          const storageRef = ref(storage, `uploads/${user_id}`);
-          
-          // Upload the base64 string
-          const snapshot = await uploadString(storageRef, fileData, 'base64');
-          
-          // Get the download URL of the uploaded file (optional if needed)
-          const fileURL = await getDownloadURL(snapshot.ref);
-      
-          // You can decide whether you need this URL or not
-          file_valid = true;
-          // Remove file_mime_type and file_size_kb since you're no longer retrieving metadata
-          file_mime_type = ''; 
-          file_size_kb = ''; 
-      
-        } catch (error) {
-          console.error('File upload failed:', error);
-          file_valid = false;  // Mark the file as invalid in case of an error
-        }
-    } else {
-        console.log('No file provided');
+      try {
+        const fileData = file_b64.replace(/^data:.+;base64,/, '');  // Remove base64 prefix
+
+        // Create a reference in Firebase Storage
+        const storageRef = ref(storage, `uploads/${user_id}`);
+        
+        // Upload the base64 string
+        const snapshot = await uploadString(storageRef, fileData, 'base64');
+        
+        // Optional: Get the download URL of the uploaded file
+        await getDownloadURL(snapshot.ref); // Only keep this if necessary
+
+        file_valid = true;
+
+        // No need for metadata if you don't use it
+        file_mime_type = ''; // Remove metadata if not needed
+        file_size_kb = '';   // Remove metadata if not needed
+
+      } catch (error) {
+        console.error('File upload failed:', error);
+        file_valid = false;  // Mark the file as invalid in case of an error
+      }
     }
 
     res.status(200).json({

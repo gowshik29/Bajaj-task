@@ -1,95 +1,108 @@
-import Image from "next/image";
-import styles from "./page.module.css";
+'use client';
 
-export default function Home() {
+import { useState } from 'react';
+import axios from 'axios';
+
+const Home: React.FC = () => {
+  const [input, setInput] = useState<string>('');
+  const [response, setResponse] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<string[]>([]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    try {
+      const parsedInput = JSON.parse(input);
+      const res = await axios.post('/api/bfhl', parsedInput);
+      setResponse(res.data);
+    } catch (err) {
+      setError('Invalid JSON input');
+    }
+  };
+
+  const handleFilterChange = (option: string) => {
+    if (filter.includes(option)) {
+      setFilter(filter.filter((f) => f !== option));
+    } else {
+      setFilter([...filter, option]);
+    }
+  };
+
   return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
+    <div>
+      <h1>Backend Challenge</h1>
+      <form onSubmit={handleSubmit}>
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder='Enter JSON'
+          style={{ width: '100%', height: '150px' }}
         />
-        <ol>
-          <li>
-            Get started by editing <code>app/page.tsx</code>.
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+        <button type='submit' style={{ marginTop: '10px' }}>Submit</button>
+      </form>
 
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={styles.secondary}
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className={styles.footer}>
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      {error && <p>{error}</p>}
+
+      {response && (
+        <>
+          <div>
+            <h2>Filter Options:</h2>
+            <label>
+              <input
+                type="checkbox"
+                value="numbers"
+                checked={filter.includes('numbers')}
+                onChange={() => handleFilterChange('numbers')}
+              />
+              Numbers
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                value="alphabets"
+                checked={filter.includes('alphabets')}
+                onChange={() => handleFilterChange('alphabets')}
+              />
+              Alphabets
+            </label>
+            <label>
+              <input
+                type="checkbox"
+                value="highest_lowercase_alphabet"
+                checked={filter.includes('highest_lowercase_alphabet')}
+                onChange={() => handleFilterChange('highest_lowercase_alphabet')}
+              />
+              Highest Lowercase Alphabet
+            </label>
+          </div>
+
+          <div>
+            <h2>Response:</h2>
+            {filter.includes('numbers') && (
+              <div>
+                <h3>Numbers:</h3>
+                <pre>{JSON.stringify(response.numbers, null, 2)}</pre>
+              </div>
+            )}
+            {filter.includes('alphabets') && (
+              <div>
+                <h3>Alphabets:</h3>
+                <pre>{JSON.stringify(response.alphabets, null, 2)}</pre>
+              </div>
+            )}
+            {filter.includes('highest_lowercase_alphabet') && (
+              <div>
+                <h3>Highest Lowercase Alphabet:</h3>
+                <pre>{JSON.stringify(response.highest_lowercase_alphabet, null, 2)}</pre>
+              </div>
+            )}
+          </div>
+        </>
+      )}
     </div>
   );
-}
+};
+
+export default Home;
